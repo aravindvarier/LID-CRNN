@@ -38,7 +38,7 @@ class LID(nn.Module):
                                 nn.BatchNorm2d(512),
                                 nn.MaxPool2d((2,2), 2),
                                 )
-        self.lstm = nn.LSTM(512, self.hidden_size, bidirectional = True, dropout = 0.1, batch_first = True)
+        self.lstm = nn.LSTM(512, self.hidden_size, bidirectional = True,dropout = 0.1, batch_first = True)
         self.fc = nn.Linear(self.hidden_size*2, 5)
 
         # bilstm = nn.LSTM()
@@ -46,11 +46,12 @@ class LID(nn.Module):
         
         x = self.cnn(x)
         x = x.squeeze(2).permute(0,2,1)
-        x = self.lstm(x)[1][0]
-        x = x.permute(1,0,2)
-        x = torch.flatten(x, 1,2)
+        output, (h_t, c_t) = self.lstm(x)
+        x = torch.cat((output[:, -1, :self.hidden_size//2], output[:, 0, self.hidden_size//2:]), dim = 1)
         x = self.fc(x)
         return(x)
 
 model = LID(512).double()
 x = torch.tensor(np.load('audio.npy').T).unsqueeze(0).unsqueeze(0).double()
+x = model(x)
+print(x.shape)
