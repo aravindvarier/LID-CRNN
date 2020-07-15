@@ -1,4 +1,7 @@
 venv/
 .vscode/
 *.npy
-data/
+*.csv
+__pycache__/
+model_saves/
+audio_data_np/

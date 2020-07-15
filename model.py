@@ -4,9 +4,10 @@ import numpy as np
 from torchvision import models
 
 
-class LID(nn.Module):
+
+class CRNN(nn.Module):
     def __init__(self, hidden_size):
-        super(LID, self).__init__()
+        super(CRNN, self).__init__()
         self.hidden_size = hidden_size
         self.cnn = nn.Sequential(nn.Conv2d(1,16, (7,7)),
                                 nn.ReLU(),
@@ -45,13 +46,9 @@ class LID(nn.Module):
     def forward(self, x):
         
         x = self.cnn(x)
-        x = x.squeeze(2).permute(0,2,1)
+        x = x.squeeze(3).permute(0,2,1)
         output, (h_t, c_t) = self.lstm(x)
         x = torch.cat((output[:, -1, :self.hidden_size//2], output[:, 0, self.hidden_size//2:]), dim = 1)
         x = self.fc(x)
         return(x)
 
-model = LID(512).double()
-x = torch.tensor(np.load('audio.npy').T).unsqueeze(0).unsqueeze(0).double()
-x = model(x)
-print(x.shape)

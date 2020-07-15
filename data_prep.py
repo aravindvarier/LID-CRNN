@@ -14,10 +14,10 @@ lang = sys.argv[1]
 output_folder = 'audio_data_np'
 root = 'audio_data'
 
-files = os.listdir(os.path.join(root, lang))
+files = os.listdir(lang)
 for f in files:
 
-    sample_rate, signal = scipy.io.wavfile.read(f)  # File assumed to be in the same directory
+    sample_rate, signal = scipy.io.wavfile.read(os.path.join(lang,f))  # File assumed to be in the same directory
     req_samples = int(sample_rate * audio_length)
     num_samples = len(signal)
     if num_samples < req_samples: #audio file too small
@@ -56,4 +56,4 @@ for f in files:
         pow_frames = ((1.0 / NFFT) * ((mag_frames) ** 2))  # Power Spectrum
 
         # np.save(lang + "_" + str(j) + "_" + str(i) + '.npy', pow_frames)
-        np.save(os.path.join(output_folder, lang) + '/' + f + '_' + str(i) + '.npy', pow_frames)
+        np.save(os.path.join(output_folder, lang) + '/' + os.path.splitext(f)[0] + '_' + str(i) + '.npy', pow_frames)
