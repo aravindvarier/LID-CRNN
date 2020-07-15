@@ -38,13 +38,15 @@ do
 		mkdir $OUTPUT_DIR/$lang
 	fi
 
+	((counter=0))
 	for ZIP in $(cat $ZIPS)
 	do
-		if [ `ls -U $lang | wc -l` -le $NUM_DOWN ];then
+		if [ $counter -le $NUM_DOWN ];then
 	   		URL=$VOXFORGE_DATA_URL/$ZIP
 	   		wget --no-verbose -q --directory-prefix=$TEMP_DIR $URL
 	  		`dirname $0`/extract_tgz.sh $TEMP_DIR/$ZIP $lang
 			python data_prep.py $lang
+			let "counter+=((`ls $lang -U | wc -l`))"
 			rm $lang/*  #deletes all wav files
 			rm -rf $TEMP_DIR/* #deletes all folders and files in tmp which contains the zipped folders and unzipped folders
 		fi
