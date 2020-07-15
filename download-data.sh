@@ -8,13 +8,7 @@ fi
 NUM_DOWN=$1
 shift
 TEMP_DIR=tmp
-AUDIO_DIR=audio_data
 OUTPUT_DIR=audio_data_np
-
-if [ ! -d $AUDIO_DIR ]
-then
-	mkdir $AUDIO_DIR
-fi
 
 if [ ! -d $OUTPUT_DIR ]
 then
@@ -51,13 +45,13 @@ do
 	   		wget --no-verbose -q --directory-prefix=$TEMP_DIR $URL
 	  		`dirname $0`/extract_tgz.sh $TEMP_DIR/$ZIP $lang
 			python data_prep.py $lang
-			rm $AUDIO_DIR/$lang/*  #deletes all wav files
+			rm $lang/*  #deletes all wav files
 			rm -rf $TEMP_DIR/* #deletes all folders and files in tmp which contains the zipped folders and unzipped folders
 		fi
 	done	
 	rm $ZIPS
-	
-	mv $lang $AUDIO_DIR/
+	rm -rf $lang
+
 done
 
 rm -rf $TEMP_DIR
