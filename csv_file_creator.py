@@ -9,6 +9,7 @@ test_file = "audio2label_test.csv"
 root = 'audio_data_np'
 langs = os.listdir(root)
 lang2id = {lang: i for i,lang in enumerate(langs)}
+print("Languages are indexed as: ", lang2id)
 
 
 

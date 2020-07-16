@@ -8,7 +8,7 @@ import torch.nn as nn
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 
-model_name = input("Enter model name: ")
+model_name = input("Enter path to model: ")
 
 test_dataset = audio_dataset(root='./audio_data_np',csv_file='./audio2label_test.csv')
 test_bs = 5

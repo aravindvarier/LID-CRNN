@@ -6,6 +6,7 @@ from tqdm import tqdm
 import torch
 import torch.nn as nn
 import os
+from sklearn.metrics import confusion_matrix
 
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -35,12 +36,10 @@ for epoch in range(epochs):
     train_correct_pred = 0
     for audio, label in tqdm(train_loader):
         audio, label = audio.to(device), label.to(device)
-        # print(audio.shape)
-        # input()
-        pred_labels = model(audio)
-        loss = criterion(pred_labels, label)
-        final_pred = torch.argmax(pred_labels, dim = 1)
-        train_correct_pred += torch.sum(final_pred == label).item()
+        pred = model(audio)
+        loss = criterion(pred, label)
+        pred_labels = torch.argmax(pred, dim = 1)
+        train_correct_pred += torch.sum(pred_labels == label).item()
         train_loss += loss.item()
         optimizer.zero_grad()
         loss.backward()
@@ -54,14 +53,15 @@ for epoch in range(epochs):
         val_correct_pred = 0
         for audio, label in tqdm(val_loader):
             audio, label = audio.to(device), label.to(device)
-            pred_labels = model(audio)
-            loss = criterion(pred_labels, label)
-            final_pred = torch.argmax(pred_labels, dim = 1)
-            val_correct_pred += torch.sum(final_pred == label).item()
+            pred = model(audio)
+            loss = criterion(pred, label)
+            pred_labels = torch.argmax(pred, dim = 1)
+            val_correct_pred += torch.sum(pred_labels == label).item()
             val_loss += loss.item()
         
         val_accuracy = val_correct_pred/len(val_dataset)
         print('Val Loss: {} | Val Accuracy: {}'.format(val_loss/len(val_dataset), val_accuracy))
+        print('Confusion Matrix: ', confusion_matrix(label, pred_labels))
 
         if val_accuracy > max_accuracy:
             max_accuracy = val_accuracy

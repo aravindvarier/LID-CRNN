@@ -12,7 +12,6 @@ class audio_dataset(Dataset):
         self.csv_filename = csv_file
 
         with open(self.csv_filename, 'r') as a2l:
-
             self.audio2label = a2l.readlines()
 
     def __len__(self):
