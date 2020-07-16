@@ -10,9 +10,9 @@ from sklearn.metrics import confusion_matrix
 
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-train_bs = 5
-val_bs = 5
-test_bs = 5
+train_bs = 64
+val_bs = 64
+test_bs = 64
 
 
 model = CRNN(hidden_size=512).double().to(device)
@@ -31,6 +31,7 @@ max_accuracy = -1
 model_dir = './model_saves/'
 best_epoch = 0
 for epoch in range(epochs):
+    torch.cuda.empty_cache()
     model.train()
     train_loss = 0
     train_correct_pred = 0
@@ -61,7 +62,7 @@ for epoch in range(epochs):
         
         val_accuracy = val_correct_pred/len(val_dataset)
         print('Val Loss: {} | Val Accuracy: {}'.format(val_loss/len(val_dataset), val_accuracy))
-        print('Confusion Matrix: ', confusion_matrix(label, pred_labels))
+        print('Confusion Matrix: ', confusion_matrix(label.cpu(), pred_labels.cpu()))
 
         if val_accuracy > max_accuracy:
             max_accuracy = val_accuracy
