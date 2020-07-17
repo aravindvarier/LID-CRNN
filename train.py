@@ -52,6 +52,7 @@ for epoch in range(epochs):
     with torch.no_grad():
         val_loss = 0
         val_correct_pred = 0
+        conf_mat = np.zeros((5, 5))
         for audio, label in tqdm(val_loader):
             audio, label = audio.to(device), label.to(device)
             pred = model(audio)
@@ -59,10 +60,13 @@ for epoch in range(epochs):
             pred_labels = torch.argmax(pred, dim = 1)
             val_correct_pred += torch.sum(pred_labels == label).item()
             val_loss += loss.item()
+
+            conf_mat += confusion_matrix(label.cpu(), pred_labels.cpu())
         
         val_accuracy = val_correct_pred/len(val_dataset)
         print('Val Loss: {} | Val Accuracy: {}'.format(val_loss/len(val_dataset), val_accuracy))
-        print('Confusion Matrix: ', confusion_matrix(label.cpu(), pred_labels.cpu()))
+        print('****Confusion Matrix****')
+        print(conf_mat)
 
         if val_accuracy > max_accuracy:
             max_accuracy = val_accuracy
