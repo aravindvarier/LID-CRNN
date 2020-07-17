@@ -46,19 +46,12 @@ class CRNN(nn.Module):
 								)
 		self.lstm = nn.LSTM(512, self.hidden_size, bidirectional = True, batch_first = True)
 		self.fc = nn.Linear(self.hidden_size*2, 5)
-		#self.fc_temp = nn.Linear(512*3, 5)
-
-        # bilstm = nn.LSTM()
-
+	
 	def forward(self, x):
-		print(x.max())
-		input()
 		x = self.cnn(x)
 		x = x.squeeze(3).permute(0,2,1)
 		output, (h_t, c_t) = self.lstm(x)
 		x = torch.cat((output[:, -1, :self.hidden_size//2], output[:, 0, self.hidden_size//2:]), dim = 1)
 		x = self.fc(x)
-		#x = x.flatten(1,2)
-		#x = self.fc_temp(x)
 		return(x)
 

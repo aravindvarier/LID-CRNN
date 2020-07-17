@@ -19,6 +19,11 @@ torch.manual_seed(SEED)
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 
+def collate(batch):
+    print(len(batch))
+    input()
+
+
 parser = argparse.ArgumentParser(description='Training Script for Encoder+LSTM decoder')
 parser.add_argument('--lr', type=float, help='learning rate', default=0.001)
 parser.add_argument('--beta1', help="Beta1 for Adam", type=float, default=0.9)
@@ -36,11 +41,11 @@ val_bs = args.batch_size_val
 
 model = CRNN(hidden_size=512).double().to(device)
 
-train_dataset = audio_dataset(root='./audio_data_np',csv_file='./audio2label_train.csv')
-val_dataset = audio_dataset(root='./audio_data_np',csv_file='./audio2label_val.csv')
+train_dataset = audio_dataset(root='./audio_data',csv_file='./audio2label_train.csv')
+val_dataset = audio_dataset(root='./audio_data',csv_file='./audio2label_val.csv')
 
-train_loader = DataLoader(train_dataset, batch_size = train_bs, shuffle = True, num_workers=2)
-val_loader = DataLoader(val_dataset, batch_size = val_bs, shuffle = True, num_workers=2)
+train_loader = DataLoader(train_dataset, batch_size = train_bs, shuffle = True, num_workers=2, collate_fn=collate)
+val_loader = DataLoader(val_dataset, batch_size = val_bs, shuffle = True, num_workers=2, collate_fn=collate)
 
 
 criterion = nn.CrossEntropyLoss(reduction = 'sum')

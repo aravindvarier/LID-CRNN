@@ -6,7 +6,7 @@ train_file = "audio2label_train.csv"
 val_file = "audio2label_val.csv"
 test_file = "audio2label_test.csv"
 
-root = 'audio_data_np'
+root = 'audio_data'
 langs = os.listdir(root)
 lang2id = {lang: i for i,lang in enumerate(langs)}
 print("Languages are indexed as: ", lang2id)

@@ -8,11 +8,10 @@ fi
 NUM_DOWN=$1
 shift
 TEMP_DIR=tmp
-OUTPUT_DIR=audio_data_np
-
-if [ ! -d $OUTPUT_DIR ]
+AUDIO_DIR=audio_data
+if [ ! -d $AUDIO_DIR ]
 then
-	mkdir $OUTPUT_DIR
+	mkdir $AUDIO_DIR
 fi
 
 
@@ -29,31 +28,20 @@ do
 	ZIPS=zipped_index_$lang
 
 	curl $VOXFORGE_DATA_URL | grep -o '<a .*href=.*>' | sed -e 's/<a /\n<a /g' | sed -e 's/<a .*href=['"'"'"]//' -e 's/["'"'"'].*$//' -e '/^$/ d' | grep tgz$  > $ZIPS
-
 	if [ ! -d $lang ]; then
   		mkdir $lang
 	fi
-
-	if [ ! -d $OUTPUT_DIR/$lang ]; then
-		mkdir $OUTPUT_DIR/$lang
-	fi
-
-	((counter=0))
 	for ZIP in $(cat $ZIPS)
 	do
-		if [ $counter -le $NUM_DOWN ];then
+		if [ `ls -U $lang | wc -l` -le $NUM_DOWN ];then
 	   		URL=$VOXFORGE_DATA_URL/$ZIP
 	   		wget --no-verbose -q --directory-prefix=$TEMP_DIR $URL
 	  		`dirname $0`/extract_tgz.sh $TEMP_DIR/$ZIP $lang
-			python data_prep.py $lang
-			let "counter+=((`ls $lang -U | wc -l`))"
-			rm $lang/*  #deletes all wav files
-			rm -rf $TEMP_DIR/* #deletes all folders and files in tmp which contains the zipped folders and unzipped folders
 		fi
 	done	
 	rm $ZIPS
-	rm -rf $lang
-
+	
+	mv $lang $AUDIO_DIR/
 done
 
 rm -rf $TEMP_DIR
