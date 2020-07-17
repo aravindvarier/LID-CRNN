@@ -7,12 +7,31 @@ import torch
 import torch.nn as nn
 import os
 from sklearn.metrics import confusion_matrix
+import argparse
+
+
+
+SEED = 42
+torch.manual_seed(SEED)
+#torch.backends.cudnn.benchmark=True
 
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-train_bs = 64
-val_bs = 64
-test_bs = 64
+
+
+parser = argparse.ArgumentParser(description='Training Script for Encoder+LSTM decoder')
+parser.add_argument('--lr', type=float, help='learning rate', default=0.001)
+parser.add_argument('--beta1', help="Beta1 for Adam", type=float, default=0.9)
+parser.add_argument('--beta2', help="Beta2 for Adam", type=float, default=0.999)
+parser.add_argument('--batch-size', type=int, help='batch size', default=64)
+parser.add_argument('--batch-size-val', type=int, help='batch size validation', default=64)
+parser.add_argument('--num-epochs', type=int, default=100)
+
+args = parser.parse_args()
+
+
+train_bs = args.batch_size
+val_bs = args.batch_size_val
 
 
 model = CRNN(hidden_size=512).double().to(device)
@@ -20,13 +39,13 @@ model = CRNN(hidden_size=512).double().to(device)
 train_dataset = audio_dataset(root='./audio_data_np',csv_file='./audio2label_train.csv')
 val_dataset = audio_dataset(root='./audio_data_np',csv_file='./audio2label_val.csv')
 
-train_loader = DataLoader(train_dataset, batch_size = train_bs, shuffle = True)
-val_loader = DataLoader(val_dataset, batch_size = val_bs, shuffle = True)
+train_loader = DataLoader(train_dataset, batch_size = train_bs, shuffle = True, num_workers=2)
+val_loader = DataLoader(val_dataset, batch_size = val_bs, shuffle = True, num_workers=2)
 
 
 criterion = nn.CrossEntropyLoss(reduction = 'sum')
-optimizer = optim.Adam(model.parameters())
-epochs = 100
+optimizer = optim.Adam(model.parameters(), lr = args.lr, betas = (args.beta1, args.beta2))
+epochs = args.num_epochs
 max_accuracy = -1
 model_dir = './model_saves/'
 best_epoch = 0
@@ -75,6 +94,8 @@ for epoch in range(epochs):
             if not os.path.isdir(model_dir):
                 os.makedirs(model_dir)
             torch.save(model, model_dir + str(epoch) + '.pth')
+
+torch.save(model, model_dir + "final.pth")
 
 
 

@@ -5,3 +5,4 @@ venv/
 __pycache__/
 model_saves/
 audio_data_np/
+*.pyc
