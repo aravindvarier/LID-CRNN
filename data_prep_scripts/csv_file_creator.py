@@ -1,12 +1,19 @@
+#TO BE RUN FROM ONE FOLDER ABOVE
+
+
 import csv
 from random import shuffle
-import os 
+import os
 
-train_file = "audio2label_train.csv"
-val_file = "audio2label_val.csv"
-test_file = "audio2label_test.csv"
+dst_folder = 'data'
 
-root = 'audio_data'
+os.system('rm -rf {}/*.csv'.format(dst_folder))
+
+train_file = os.path.join(dst_folder, "audio2label_train.csv")
+val_file = os.path.join(dst_folder, "audio2label_val.csv")
+test_file = os.path.join(dst_folder, "audio2label_test.csv")
+
+root = 'data/spectrogram_data_fixed'
 langs = os.listdir(root)
 lang2id = {lang: i for i,lang in enumerate(langs)}
 print("Languages are indexed as: ", lang2id)

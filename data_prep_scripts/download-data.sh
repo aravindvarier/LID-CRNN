@@ -1,14 +1,14 @@
 #Needs to be run from one directory above
 if [ $# -lt 1 ]; then
   echo "Usage: $0 <#downloads> <list of languages>"
-  echo "Example: ./download-data.sh 15000 english french"
+  echo "Example: ./data_prep_scripts/download-data.sh 15000 english french"
   exit 1
 fi
 
 NUM_DOWN=$1
 shift
 TEMP_DIR=tmp
-AUDIO_DIR=audio_data
+AUDIO_DIR="data/audio_data"
 if [ ! -d $AUDIO_DIR ]
 then
 	mkdir $AUDIO_DIR

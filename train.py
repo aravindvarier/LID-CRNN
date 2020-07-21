@@ -19,27 +19,7 @@ torch.manual_seed(SEED)
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-class MyCollator(object):
-	def __init__(self, num_frames):
-		self.num_frames = num_frames
-	def __call__(self, batch):
-		label_list = []
-		temp = []
-		for spec, label in batch:
-			cur_width = spec.shape[2]
-			if cur_width < self.num_frames:
-				temp.append(spec.repeat(1, 1, self.num_frames//cur_width + 1)[:, :, :self.num_frames])	
-				label_list.append(label)
-			else:
-				num_multiples = cur_width // self.num_frames + 1
-				req_width = num_multiples * self.num_frames
-				new_spec = torch.cat( (spec, spec[:, :, :(req_width - cur_width)]), dim=2 )
-				for i in range(num_multiples):
-					temp.append(new_spec[:, :, i*self.num_frames:(i+1)*self.num_frames])
-					label_list.append(label)
-		specs = torch.stack(temp)
-		labels = torch.tensor(label_list)
-		return specs, labels	
+
 
 parser = argparse.ArgumentParser(description='Training script for CRNN that performs LID')
 parser.add_argument('--lr', type=float, help='learning rate', default=0.001)
@@ -48,9 +28,6 @@ parser.add_argument('--beta2', help="Beta2 for Adam", type=float, default=0.999)
 parser.add_argument('--batch-size', type=int, help='batch size', default=64)
 parser.add_argument('--batch-size-val', type=int, help='batch size validation', default=64)
 parser.add_argument('--num-epochs', type=int, default=100)
-parser.add_argument('--num-frames', type=int, default=500)
-parser.add_argument('--pix-per-sec', type=int, default=100)
-parser.add_argument('--num-freq-levels', type=int, default=129)
 parser.add_argument('--hidden-size', type=int, default=512)
 args = parser.parse_args()
 
@@ -61,20 +38,20 @@ val_bs = args.batch_size_val
 
 model = CRNN(hidden_size=args.hidden_size).double().to(device)
 
-train_dataset = audio_dataset(root='./audio_data',csv_file='./audio2label_train.csv', pix_per_sec=args.pix_per_sec, num_freq_levels=args.num_freq_levels)
-val_dataset = audio_dataset(root='./audio_data',csv_file='./audio2label_val.csv', pix_per_sec=args.pix_per_sec, num_freq_levels=args.num_freq_levels)
+train_dataset = audio_dataset(root='./data/spectrogram_data_fixed',csv_file='./data/audio2label_train.csv')
+print("Languages are indexed as: ", train_dataset.lang2id)
+val_dataset = audio_dataset(root='./data/spectrogram_data_fixed',csv_file='./data/audio2label_val.csv')
 
-collater = MyCollator(args.num_frames)
 
-train_loader = DataLoader(train_dataset, batch_size = train_bs, shuffle = True, collate_fn=collater)
-val_loader = DataLoader(val_dataset, batch_size = val_bs, shuffle = True, collate_fn=collater)
+train_loader = DataLoader(train_dataset, batch_size = train_bs, shuffle = True)
+val_loader = DataLoader(val_dataset, batch_size = val_bs, shuffle = True)
 
 
 criterion = nn.CrossEntropyLoss(reduction = 'sum')
 optimizer = optim.Adam(model.parameters(), lr = args.lr, betas = (args.beta1, args.beta2))
 epochs = args.num_epochs
 max_accuracy = -1
-model_dir = './model_saves/'
+model_dir = 'model_saves'
 best_epoch = 0
 for epoch in range(epochs):
 	torch.cuda.empty_cache()
@@ -100,7 +77,7 @@ for epoch in range(epochs):
 		val_correct_pred = 0
 		conf_mat = np.zeros((5, 5))
 		for audio, label in tqdm(val_loader):
-			audio, label = audio.to(device), label.to(device)
+			audio, label = audio.double().to(device), label.to(device)
 			pred = model(audio)
 			loss = criterion(pred, label)
 			pred_labels = torch.argmax(pred, dim = 1)
@@ -120,9 +97,12 @@ for epoch in range(epochs):
 			print('Saving the model....')
 			if not os.path.isdir(model_dir):
 				os.makedirs(model_dir)
-			torch.save(model, model_dir + str(epoch) + '.pth')
 
-torch.save(model, model_dir + "final.pth")
+			torch.save({'model_state_dict' : model.state_dict(), 'hidden_size' : args.hidden_size}, os.path.join(model_dir ,'best.pth'))
+
+print("Saving final model...")
+torch.save({'model_state_dict' : model.state_dict(), 'hidden_size' : args.hidden_size}, os.path.join(model_dir ,'final.pth'))
+
 
 
 

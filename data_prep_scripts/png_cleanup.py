@@ -12,11 +12,11 @@ args = parser.parse_args()
 
 num_frames = args.num_frames
 
-src_dir = 'spectrogram_data'
+src_dir = 'data/spectrogram_data'
 langs = os.listdir(src_dir)
 lang2id = {lang: i for i,lang in enumerate(langs)}
 
-dst_dir = 'spectrogram_data_fixed'
+dst_dir = 'data/spectrogram_data_fixed'
 if not os.path.isdir(dst_dir):
 	os.mkdir(dst_dir)
 

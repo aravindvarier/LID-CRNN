@@ -1,15 +1,15 @@
 import os
 import argparse
 
-src_dir = 'audio_data'
+src_dir = 'data/audio_data'
 langs = os.listdir(src_dir)
 lang2id = {lang: i for i,lang in enumerate(langs)}
 
-dst_dir = 'spectrogram_data'
+dst_dir = 'data/spectrogram_data'
 if not os.path.isdir(dst_dir):
 	os.mkdir(dst_dir)
 
-parser = argparse.ArgumentParser(description='Training script for CRNN that performs LID')
+parser = argparse.ArgumentParser(description='Script which uses the sox tool to convert audio to image spectrograms')
 parser.add_argument('--pix-per-sec', type=int, default=100)
 parser.add_argument('--num-freq-levels', type=int, default=129)
 parser.add_argument('--print-freq', type=int, default=500)
