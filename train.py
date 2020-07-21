@@ -19,24 +19,34 @@ torch.manual_seed(SEED)
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
+def str2bool(v):
+    if isinstance(v, bool):
+       return v
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected.')
 
-
-parser = argparse.ArgumentParser(description='Training script for CRNN that performs LID')
+parser = argparse.ArgumentParser(description='Training script for CRNN that performs LID', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('--lr', type=float, help='learning rate', default=0.001)
 parser.add_argument('--beta1', help="Beta1 for Adam", type=float, default=0.9)
 parser.add_argument('--beta2', help="Beta2 for Adam", type=float, default=0.999)
-parser.add_argument('--batch-size', type=int, help='batch size', default=64)
+parser.add_argument('--batch-size', type=int, help='batch size training', default=64)
 parser.add_argument('--batch-size-val', type=int, help='batch size validation', default=64)
-parser.add_argument('--num-epochs', type=int, default=100)
-parser.add_argument('--hidden-size', type=int, default=512)
+parser.add_argument('--num-epochs', type=int, help='number of epochs to train', default=100)
+parser.add_argument('--hidden-size', type=int, help='hidden state size in lstm', default=512)
+parser.add_argument('--only-cnn', type=str2bool, help='To use LSTM or not', choices=[False, True], default=False)
 args = parser.parse_args()
+
 
 
 train_bs = args.batch_size
 val_bs = args.batch_size_val
 
 
-model = CRNN(hidden_size=args.hidden_size).double().to(device)
+model = CRNN(hidden_size=args.hidden_size, only_cnn=args.only_cnn).double().to(device)
 
 train_dataset = audio_dataset(root='./data/spectrogram_data_fixed',csv_file='./data/audio2label_train.csv')
 print("Languages are indexed as: ", train_dataset.lang2id)
@@ -98,10 +108,10 @@ for epoch in range(epochs):
 			if not os.path.isdir(model_dir):
 				os.makedirs(model_dir)
 
-			torch.save({'model_state_dict' : model.state_dict(), 'hidden_size' : args.hidden_size}, os.path.join(model_dir ,'best.pth'))
+			torch.save({'model_state_dict' : model.state_dict(), 'hidden_size' : args.hidden_size, 'only_cnn' : args.only_cnn}, os.path.join(model_dir ,'best.pth'))
 
 print("Saving final model...")
-torch.save({'model_state_dict' : model.state_dict(), 'hidden_size' : args.hidden_size}, os.path.join(model_dir ,'final.pth'))
+torch.save({'model_state_dict' : model.state_dict(), 'hidden_size' : args.hidden_size, 'only_cnn' : args.only_cnn}, os.path.join(model_dir ,'final.pth'))
 
 
 

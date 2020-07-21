@@ -5,6 +5,8 @@ import csv
 from random import shuffle
 import os
 
+random.seed(42)
+
 dst_folder = 'data'
 
 os.system('rm -rf {}/*.csv'.format(dst_folder))

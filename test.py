@@ -26,7 +26,7 @@ test_loader = DataLoader(test_dataset, batch_size = test_bs, shuffle = True)
 criterion = nn.CrossEntropyLoss(reduction = 'sum')
 
 checkpoint = torch.load(model_path)
-model = CRNN(hidden_size=checkpoint['hidden_size']).double().to(device)
+model = CRNN(hidden_size=checkpoint['hidden_size'], only_cnn=checkpoint['only_cnn']).double().to(device)
 model.load_state_dict(checkpoint['model_state_dict'])
 
 model.eval()

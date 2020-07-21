@@ -6,9 +6,10 @@ from torchvision import models
 
 
 class CRNN(nn.Module):
-	def __init__(self, hidden_size):
+	def __init__(self, hidden_size, only_cnn=False):
 		super(CRNN, self).__init__()
 		self.hidden_size = hidden_size
+		self.only_cnn = only_cnn
 		self.cnn = nn.Sequential(nn.Conv2d(1,16, (7,7)),
 								nn.ReLU(),
 								nn.BatchNorm2d(16),
@@ -46,12 +47,17 @@ class CRNN(nn.Module):
 								)
 		self.lstm = nn.LSTM(256, self.hidden_size, bidirectional = True, batch_first = True)
 		self.fc = nn.Linear(self.hidden_size*2, 5)
+		self.fc_cnn_only = nn.Linear(256 * 13, 5)
 	
 	def forward(self, x):
 		x = self.cnn(x)
+		if self.only_cnn:
+			x = x.flatten(start_dim=1)
+			x = self.fc_cnn_only(x)
+			return x
 		x = x.squeeze(2).permute(0,2,1)
 		output, (h_t, c_t) = self.lstm(x)
 		x = torch.cat((output[:, -1, :self.hidden_size//2], output[:, 0, self.hidden_size//2:]), dim = 1)
 		x = self.fc(x)
-		return(x)
+		return x
 
