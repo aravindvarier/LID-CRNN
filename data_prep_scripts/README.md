@@ -1,6 +1,6 @@
 ## This folder contains all the files which are required to prepare the dataset.
 
-# *IMPORTANT: All scripts in this folder have to be run from one folder above for them to function properly.*
+*IMPORTANT: All scripts in this folder have to be run from one folder above for them to function properly.*
 
 The dataset used is the Voxforge dataset. The script currently downloads 5 Languages which is what the model is trained on as well. These are:
 1. English
@@ -19,4 +19,4 @@ Here is a short description of each script:
 
 These scripts should be in the order in which they were described above.
 
-# *Note: One can also run the main.sh script which will run all these scripts in one go. Currently, running main.sh just runs all the above programs with default command line arguments. To be added: functionality for command line arguments to main.sh*
+*Note: One can also run the main.sh script which will run all these scripts in one go. Currently, running main.sh just runs all the above programs with default command line arguments. To be added: functionality for command line arguments to main.sh*
