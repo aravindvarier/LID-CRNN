@@ -4,6 +4,7 @@ venv/
 *.csv
 __pycache__/
 model_saves/
-audio_data_np/
+audio_data*/
 *.pyc
 *.BAK
+spectrogram_data*/
