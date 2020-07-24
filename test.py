@@ -26,23 +26,27 @@ test_loader = DataLoader(test_dataset, batch_size = test_bs, shuffle = True)
 criterion = nn.CrossEntropyLoss(reduction = 'sum')
 
 checkpoint = torch.load(model_path)
-model = CRNN(hidden_size=checkpoint['hidden_size'], only_cnn=checkpoint['only_cnn']).double().to(device)
+model = CRNN(hidden_size=checkpoint['hidden_size'], only_cnn=checkpoint['only_cnn'], cnn_type=checkpoint['cnn_type']).double().to(device)
 model.load_state_dict(checkpoint['model_state_dict'])
 
 model.eval()
 with torch.no_grad():
 	test_loss = 0
 	test_correct_pred = 0
-	conf_mat = np.zeros((5, 5))
+	all_labels = []
+	all_pred_labels = []
 	for audio, label in tqdm(test_loader):
 		audio, label = audio.double().to(device), label.to(device)
 		pred = model(audio)
 		loss = criterion(pred, label)
 		pred_labels = torch.argmax(pred, dim = 1)
+		all_labels.append(label.cpu())
+		all_pred_labels.append(pred_labels.cpu())
 		test_correct_pred += torch.sum(pred_labels == label).item()
 		test_loss += loss.item()
-
-		conf_mat += confusion_matrix(label.cpu(), pred_labels.cpu())
+	all_labels = torch.cat(all_labels)
+	all_pred_labels = torch.cat(all_pred_labels)
+	conf_mat = confusion_matrix(all_label, all_pred_labels)
 
 
 test_accuracy = test_correct_pred/len(test_dataset)
