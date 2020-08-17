@@ -33,7 +33,7 @@ def str2bool(v):
         raise argparse.ArgumentTypeError('Boolean value expected.')
 
 parser = argparse.ArgumentParser(description='Training script for CRNN that performs LID', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-parser.add_argument('--cnn-type', type=str, help='Type of CNN used', default='vgg', choices=['vgg', 'inceptionv3'])
+parser.add_argument('--cnn-type', type=str, help='Type of CNN used', default='vgg', choices=['vgg', 'inceptionv3_l', 'inceptionv3_m', 'inceptionv3_s'])
 parser.add_argument('--lr', type=float, help='learning rate', default=0.001)
 parser.add_argument('--beta1', help="Beta1 for Adam", type=float, default=0.9)
 parser.add_argument('--beta2', help="Beta2 for Adam", type=float, default=0.999)
@@ -42,6 +42,7 @@ parser.add_argument('--batch-size-val', type=int, help='batch size validation', 
 parser.add_argument('--num-epochs', type=int, help='number of epochs to train', default=100)
 parser.add_argument('--hidden-size', type=int, help='hidden state size in lstm', default=512)
 parser.add_argument('--only-cnn', type=str2bool, help='To use LSTM or not', choices=[False, True], default=False)
+parser.add_argument('--exp-name', type=str, help='Experiment name used to create model save folder', default = "")
 args = parser.parse_args()
 
 
@@ -66,9 +67,10 @@ optimizer = optim.Adam(model.parameters(), lr = args.lr, betas = (args.beta1, ar
 epochs = args.num_epochs
 max_accuracy = -1
 
-exp_name = args.cnn_type + "_" + str(args.only_cnn) + "_" + ("" if args.only_cnn else str(args.hidden_size))
-print(exp_name)
-input()
+if not args.exp_name:
+	exp_name = args.cnn_type + "_" + str(args.only_cnn) + "_" + ("" if args.only_cnn else str(args.hidden_size))
+else:
+	exp_name = args.exp_name
 model_dir = 'model_saves/' + exp_name
 
 best_epoch = 0
@@ -76,22 +78,48 @@ for epoch in range(epochs):
 	torch.cuda.empty_cache()
 	model.train()
 	train_loss = 0
-	train_correct_pred = 0
-	for audio, label in tqdm(train_loader):
+	train_loss_aux = 0
+	total_train_correct_pred = 0
+	total_train_correct_pred_aux = 0
+	for batch_num, (audio, label) in enumerate(tqdm(train_loader)):
 		audio, label = audio.double().to(device), label.to(device)
+		if args.cnn_type == 'vgg' or args.cnn_type == 'inceptionv3_s' or args.cnn_type == 'inceptionv3_m':
+			pred = model(audio)
+			loss = criterion(pred, label)
+			pred_labels = torch.argmax(pred, dim = 1)
+			total_train_correct_pred += torch.sum(pred_labels == label).item()
+			train_loss += loss.item()
+			optimizer.zero_grad()
+			loss.backward()
+			optimizer.step()
+		else: #inception_large
+			train_correct_pred = train_correct_pred_aux = 0
+			pred, pred_aux = model(audio)
+			loss = criterion(pred, label)
+			loss_aux = criterion(pred_aux, label)
+			pred_labels = torch.argmax(pred, dim=1)
+			pred_labels_aux = torch.argmax(pred_aux, dim=1)
+			train_correct_pred = torch.sum(pred_labels == label).item()
+			total_train_correct_pred += train_correct_pred
+			train_correct_pred_aux = torch.sum(pred_labels_aux == label).item()
+			total_train_correct_pred_aux += train_correct_pred_aux 
+			train_loss += loss.item()
+			train_loss_aux += loss_aux.item()
+			optimizer.zero_grad()
+			total_loss = loss + loss_aux
+			total_loss.backward()
+			optimizer.step()
+			if batch_num % 50 == 0:
+				print("Accuracy main: {} | Accuracy aux: {}".format(train_correct_pred/len(label), train_correct_pred_aux/len(label)))
 		
-		pred = model(audio)
-		loss = criterion(pred, label)
-		pred_labels = torch.argmax(pred, dim = 1)
-		train_correct_pred += torch.sum(pred_labels == label).item()
-		train_loss += loss.item()
-		optimizer.zero_grad()
-		loss.backward()
-		optimizer.step()
+			
 
 
-	
-	print('Epoch: {} | Train Loss: {} | Train Accuracy: {}'.format(epoch, train_loss/len(train_dataset), train_correct_pred/len(train_dataset)))
+	if args.cnn_type == 'vgg' or args.cnn_type == 'inceptionv3_s' or args.cnn_type == 'inceptionv3_m':
+		print('Epoch: {} | Train Loss: {} | Train Accuracy: {}'.format(epoch, train_loss/len(train_dataset), total_train_correct_pred/len(train_dataset)))
+	else:
+		print('Epoch: {} | Train Loss: {} | Train Loss(Aux): {} | Train Accuracy: {} | Train Accuracy(Aux): {} '.format(epoch, train_loss/len(train_dataset), train_loss_aux/len(train_dataset), total_train_correct_pred/len(train_dataset), total_train_correct_pred_aux/len(train_dataset)))
+
 	
 	
 	model.eval()

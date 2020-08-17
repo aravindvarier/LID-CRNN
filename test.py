@@ -11,7 +11,6 @@ from sklearn.metrics import confusion_matrix
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 
-model_path = input("Enter path to model: ")
 
 
 parser = argparse.ArgumentParser(description='Testing script for CRNN that performs LID')
@@ -25,6 +24,7 @@ test_loader = DataLoader(test_dataset, batch_size = test_bs, shuffle = True)
 
 criterion = nn.CrossEntropyLoss(reduction = 'sum')
 
+model_path = input("Enter path to model: ")
 checkpoint = torch.load(model_path)
 model = CRNN(hidden_size=checkpoint['hidden_size'], only_cnn=checkpoint['only_cnn'], cnn_type=checkpoint['cnn_type']).double().to(device)
 model.load_state_dict(checkpoint['model_state_dict'])
@@ -46,7 +46,7 @@ with torch.no_grad():
 		test_loss += loss.item()
 	all_labels = torch.cat(all_labels)
 	all_pred_labels = torch.cat(all_pred_labels)
-	conf_mat = confusion_matrix(all_label, all_pred_labels)
+	conf_mat = confusion_matrix(all_labels, all_pred_labels)
 
 
 test_accuracy = test_correct_pred/len(test_dataset)

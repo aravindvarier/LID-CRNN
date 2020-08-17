@@ -24,47 +24,46 @@ InceptionOutputs.__annotations__ = {'logits': torch.Tensor, 'aux_logits': Option
 _InceptionOutputs = InceptionOutputs
 
 
-def inception_v3(pretrained=False, progress=True, **kwargs):
-    r"""Inception v3 model architecture from
-    `"Rethinking the Inception Architecture for Computer Vision" <http://arxiv.org/abs/1512.00567>`_.
+#def inception_v3(pretrained=False, progress=True, **kwargs):
+#    r"""Inception v3 model architecture from
+#    `"Rethinking the Inception Architecture for Computer Vision" <http://arxiv.org/abs/1512.00567>`_.
+#
+#    .. note::
+#        **Important**: In contrast to the other models the inception_v3 expects tensors with a size of
+#        N x 3 x 299 x 299, so ensure your images are sized accordingly.
+#
+#    Args:
+#        pretrained (bool): If True, returns a model pre-trained on ImageNet
+#        progress (bool): If True, displays a progress bar of the download to stderr
+#        aux_logits (bool): If True, add an auxiliary branch that can improve training.
+#            Default: *True*
+#        transform_input (bool): If True, preprocesses the input according to the method with which it
+#            was trained on ImageNet. Default: *False*
+#    """
+#    if pretrained:
+#        if 'transform_input' not in kwargs:
+#            kwargs['transform_input'] = True
+#        if 'aux_logits' in kwargs:
+#            original_aux_logits = kwargs['aux_logits']
+#            kwargs['aux_logits'] = True
+#        else:
+#            original_aux_logits = True
+#        model = Inception3(**kwargs)
+#        state_dict = load_state_dict_from_url(model_urls['inception_v3_google'],
+#                                              progress=progress)
+#        model.load_state_dict(state_dict)
+#        if not original_aux_logits:
+#            model.aux_logits = False
+#            del model.AuxLogits
+#        return model
+#
+#    return Inception3(**kwargs)
 
-    .. note::
-        **Important**: In contrast to the other models the inception_v3 expects tensors with a size of
-        N x 3 x 299 x 299, so ensure your images are sized accordingly.
-
-    Args:
-        pretrained (bool): If True, returns a model pre-trained on ImageNet
-        progress (bool): If True, displays a progress bar of the download to stderr
-        aux_logits (bool): If True, add an auxiliary branch that can improve training.
-            Default: *True*
-        transform_input (bool): If True, preprocesses the input according to the method with which it
-            was trained on ImageNet. Default: *False*
-    """
-    if pretrained:
-        if 'transform_input' not in kwargs:
-            kwargs['transform_input'] = True
-        if 'aux_logits' in kwargs:
-            original_aux_logits = kwargs['aux_logits']
-            kwargs['aux_logits'] = True
-        else:
-            original_aux_logits = True
-        model = Inception3(**kwargs)
-        state_dict = load_state_dict_from_url(model_urls['inception_v3_google'],
-                                              progress=progress)
-        model.load_state_dict(state_dict)
-        if not original_aux_logits:
-            model.aux_logits = False
-            del model.AuxLogits
-        return model
-
-    return Inception3(**kwargs)
-
-
-class Inception3(nn.Module):
+class Inception3_small(nn.Module):
 
     def __init__(self, num_classes=1000, aux_logits=True, transform_input=False,
                  inception_blocks=None, init_weights=True):
-        super(Inception3, self).__init__()
+        super(Inception3_small, self).__init__()
         if inception_blocks is None:
             inception_blocks = [
                 BasicConv2d, InceptionA, InceptionB, InceptionC,
@@ -81,10 +80,10 @@ class Inception3(nn.Module):
 
         self.aux_logits = aux_logits
         self.transform_input = transform_input
-        self.Conv2d_1a_3x3 = conv_block(3, 32, kernel_size=3, stride=2)
-        self.Conv2d_2a_3x3 = conv_block(32, 64, kernel_size=3)
-        #self.Conv2d_2b_3x3 = conv_block(32, 64, kernel_size=3, padding=1)
-        self.Conv2d_3b_1x1 = conv_block(64, 80, kernel_size=1)
+        self.Conv2d_1a_3x3 = conv_block(1, 32, kernel_size=3, stride=2)
+        self.Conv2d_2a_3x3 = conv_block(32, 80, kernel_size=3)
+        #self.Conv2d_2b_3x3 = conv_block(64, 64, kernel_size=3, padding=1)
+        #self.Conv2d_3b_1x1 = conv_block(64, 80, kernel_size=1)
         self.Conv2d_4a_3x3 = conv_block(80, 192, kernel_size=3)
         self.Mixed_5b = inception_a(192, pool_features=32)
         self.Mixed_5c = inception_a(256, pool_features=64)
@@ -129,10 +128,10 @@ class Inception3(nn.Module):
         x = self.Conv2d_2a_3x3(x)
         # N x 64 x 147 x 147
         #x = self.Conv2d_2b_3x3(x)
-        ## N x 64 x 147 x 147
+        # N x 64 x 147 x 147
         x = F.max_pool2d(x, kernel_size=3, stride=2)
         # N x 64 x 73 x 73
-        x = self.Conv2d_3b_1x1(x)
+        #x = self.Conv2d_3b_1x1(x)
         # N x 80 x 73 x 73
         x = self.Conv2d_4a_3x3(x)
         # N x 192 x 71 x 71
@@ -143,49 +142,48 @@ class Inception3(nn.Module):
         x = self.Mixed_5c(x)
         # N x 288 x 35 x 35
         #x = self.Mixed_5d(x)
-        ## N x 288 x 35 x 35
+        # N x 288 x 35 x 35
         x = self.Mixed_6a(x)
         # N x 768 x 17 x 17
         #x = self.Mixed_6b(x)
-        ## N x 768 x 17 x 17
+        # N x 768 x 17 x 17
         #x = self.Mixed_6c(x)
-        ## N x 768 x 17 x 17
+        # N x 768 x 17 x 17
         #x = self.Mixed_6d(x)
-        ## N x 768 x 17 x 17
+        # N x 768 x 17 x 17
         #x = self.Mixed_6e(x)
-        ## N x 768 x 17 x 17
+        # N x 768 x 17 x 17
         #aux_defined = self.training and self.aux_logits
         #if aux_defined:
         aux = self.AuxLogits(x)
         #else:
         #    aux = None
-        ## N x 768 x 17 x 17
+        # N x 768 x 17 x 17
         #x = self.Mixed_7a(x)
-        ## N x 1280 x 8 x 8
+        # N x 1280 x 8 x 8
         #x = self.Mixed_7b(x)
-        ## N x 2048 x 8 x 8
+        # N x 2048 x 8 x 8
         #x = self.Mixed_7c(x)
-        ## N x 2048 x 8 x 8
-        ## Adaptive average pooling
-        ##x = F.adaptive_avg_pool2d(x, (1, 1))
+        # N x 2048 x 8 x 8
+        # Adaptive average pooling
+        #x = F.adaptive_avg_pool2d(x, (1, 1))
         #x = F.adaptive_avg_pool2d(x, (1, 14))
-		## N x 2048 x 1 x 1
+		# N x 2048 x 1 x 1
         #x = F.dropout(x, training=self.training)
-        ## N x 2048 x 1 x 1
-        ##x = torch.flatten(x, 1)
-        ## N x 2048
-        ##x = self.fc(x)
-        ## N x 1000 (num_classes)
-        #return x, aux
+        # N x 2048 x 1 x 1
+        #x = torch.flatten(x, 1)
+        # N x 2048
+        #x = self.fc(x)
+        # N x 1000 (num_classes)
         return aux
 
-    @torch.jit.unused
-    def eager_outputs(self, x, aux):
-        # type: (Tensor, Optional[Tensor]) -> InceptionOutputs
-        if self.training and self.aux_logits:
-            return InceptionOutputs(x, aux)
-        else:
-            return x
+#    @torch.jit.unused
+#    def eager_outputs(self, x, aux):
+#        # type: (Tensor, Optional[Tensor]) -> InceptionOutputs
+#        if self.training and self.aux_logits:
+#            return InceptionOutputs(x, aux)
+#        else:
+#            return x
 
     def forward(self, x):
         x = self._transform_input(x)
@@ -198,6 +196,284 @@ class Inception3(nn.Module):
         #    return InceptionOutputs(x, aux)
         #else:
         #    return self.eager_outputs(x, aux)
+
+class Inception3_medium(nn.Module):
+
+    def __init__(self, num_classes=1000, aux_logits=True, transform_input=False,
+                 inception_blocks=None, init_weights=True):
+        super(Inception3_medium, self).__init__()
+        if inception_blocks is None:
+            inception_blocks = [
+                BasicConv2d, InceptionA, InceptionB, InceptionC,
+                InceptionD, InceptionE, InceptionAux
+            ]
+        assert len(inception_blocks) == 7
+        conv_block = inception_blocks[0]
+        inception_a = inception_blocks[1]
+        inception_b = inception_blocks[2]
+        inception_c = inception_blocks[3]
+        inception_d = inception_blocks[4]
+        inception_e = inception_blocks[5]
+        inception_aux = inception_blocks[6]
+
+        self.aux_logits = aux_logits
+        self.transform_input = transform_input
+        self.Conv2d_1a_3x3 = conv_block(1, 32, kernel_size=3, stride=2)
+        self.Conv2d_2a_3x3 = conv_block(32, 64, kernel_size=3)
+        self.Conv2d_2b_3x3 = conv_block(64, 64, kernel_size=3, padding=1)
+        self.Conv2d_3b_1x1 = conv_block(64, 80, kernel_size=1)
+        self.Conv2d_4a_3x3 = conv_block(80, 192, kernel_size=3)
+        self.Mixed_5b = inception_a(192, pool_features=32)
+        self.Mixed_5c = inception_a(256, pool_features=64)
+        self.Mixed_5d = inception_a(288, pool_features=64)
+        self.Mixed_6a = inception_b(288)
+        self.Mixed_6b = inception_c(768, channels_7x7=128)
+        self.Mixed_6c = inception_c(768, channels_7x7=160)
+        self.Mixed_6d = inception_c(768, channels_7x7=160)
+        self.Mixed_6e = inception_c(768, channels_7x7=192)
+        if aux_logits:
+            self.AuxLogits = inception_aux(768, num_classes)
+        #self.Mixed_7a = inception_d(768)
+        #self.Mixed_7b = inception_e(1280)
+        #self.Mixed_7c = inception_e(2048)
+        #self.fc = nn.Linear(2048, num_classes)
+        if init_weights:
+            for m in self.modules():
+                if isinstance(m, nn.Conv2d) or isinstance(m, nn.Linear):
+                    import scipy.stats as stats
+                    stddev = m.stddev if hasattr(m, 'stddev') else 0.1
+                    X = stats.truncnorm(-2, 2, scale=stddev)
+                    values = torch.as_tensor(X.rvs(m.weight.numel()), dtype=m.weight.dtype)
+                    values = values.view(m.weight.size())
+                    with torch.no_grad():
+                        m.weight.copy_(values)
+                elif isinstance(m, nn.BatchNorm2d):
+                    nn.init.constant_(m.weight, 1)
+                    nn.init.constant_(m.bias, 0)
+
+    def _transform_input(self, x):
+        if self.transform_input:
+            x_ch0 = torch.unsqueeze(x[:, 0], 1) * (0.229 / 0.5) + (0.485 - 0.5) / 0.5
+            x_ch1 = torch.unsqueeze(x[:, 1], 1) * (0.224 / 0.5) + (0.456 - 0.5) / 0.5
+            x_ch2 = torch.unsqueeze(x[:, 2], 1) * (0.225 / 0.5) + (0.406 - 0.5) / 0.5
+            x = torch.cat((x_ch0, x_ch1, x_ch2), 1)
+        return x
+
+    def _forward(self, x):
+        # N x 3 x 299 x 299
+        x = self.Conv2d_1a_3x3(x)
+        # N x 32 x 149 x 149
+        x = self.Conv2d_2a_3x3(x)
+        # N x 64 x 147 x 147
+        x = self.Conv2d_2b_3x3(x)
+        # N x 64 x 147 x 147
+        x = F.max_pool2d(x, kernel_size=3, stride=2)
+        # N x 64 x 73 x 73
+        x = self.Conv2d_3b_1x1(x)
+        # N x 80 x 73 x 73
+        x = self.Conv2d_4a_3x3(x)
+        # N x 192 x 71 x 71
+        x = F.max_pool2d(x, kernel_size=3, stride=2)
+        # N x 192 x 35 x 35
+        x = self.Mixed_5b(x)
+        # N x 256 x 35 x 35
+        x = self.Mixed_5c(x)
+        # N x 288 x 35 x 35
+        x = self.Mixed_5d(x)
+        # N x 288 x 35 x 35
+        x = self.Mixed_6a(x)
+        # N x 768 x 17 x 17
+        x = self.Mixed_6b(x)
+        # N x 768 x 17 x 17
+        x = self.Mixed_6c(x)
+        # N x 768 x 17 x 17
+        x = self.Mixed_6d(x)
+        # N x 768 x 17 x 17
+        x = self.Mixed_6e(x)
+        # N x 768 x 17 x 17
+        #aux_defined = self.training and self.aux_logits
+        #if aux_defined:
+        aux = self.AuxLogits(x)
+        #else:
+        #    aux = None
+        # N x 768 x 17 x 17
+        #x = self.Mixed_7a(x)
+        # N x 1280 x 8 x 8
+        #x = self.Mixed_7b(x)
+        # N x 2048 x 8 x 8
+        #x = self.Mixed_7c(x)
+        # N x 2048 x 8 x 8
+        # Adaptive average pooling
+        #x = F.adaptive_avg_pool2d(x, (1, 1))
+        #x = F.adaptive_avg_pool2d(x, (1, 14))
+		# N x 2048 x 1 x 1
+        #x = F.dropout(x, training=self.training)
+        # N x 2048 x 1 x 1
+        #x = torch.flatten(x, 1)
+        # N x 2048
+        #x = self.fc(x)
+        # N x 1000 (num_classes)
+        return aux
+
+#    @torch.jit.unused
+#    def eager_outputs(self, x, aux):
+#        # type: (Tensor, Optional[Tensor]) -> InceptionOutputs
+#        if self.training and self.aux_logits:
+#            return InceptionOutputs(x, aux)
+#        else:
+#            return x
+
+    def forward(self, x):
+        x = self._transform_input(x)
+        x = self._forward(x)
+        return x
+        #aux_defined = self.training and self.aux_logits
+        #if torch.jit.is_scripting():
+        #    if not aux_defined:
+        #        warnings.warn("Scripted Inception3 always returns Inception3 Tuple")
+        #    return InceptionOutputs(x, aux)
+        #else:
+        #    return self.eager_outputs(x, aux)
+
+
+
+class Inception3_large(nn.Module):
+
+    def __init__(self, num_classes=1000, aux_logits=True, transform_input=False,
+                 inception_blocks=None, init_weights=True):
+        super(Inception3_large, self).__init__()
+        if inception_blocks is None:
+            inception_blocks = [
+                BasicConv2d, InceptionA, InceptionB, InceptionC,
+                InceptionD, InceptionE, InceptionAux
+            ]
+        assert len(inception_blocks) == 7
+        conv_block = inception_blocks[0]
+        inception_a = inception_blocks[1]
+        inception_b = inception_blocks[2]
+        inception_c = inception_blocks[3]
+        inception_d = inception_blocks[4]
+        inception_e = inception_blocks[5]
+        inception_aux = inception_blocks[6]
+
+        self.aux_logits = aux_logits
+        self.transform_input = transform_input
+        self.Conv2d_1a_3x3 = conv_block(1, 32, kernel_size=3, stride=2)
+        self.Conv2d_2a_3x3 = conv_block(32, 64, kernel_size=3)
+        self.Conv2d_2b_3x3 = conv_block(64, 64, kernel_size=3, padding=1)
+        self.Conv2d_3b_1x1 = conv_block(64, 80, kernel_size=1)
+        self.Conv2d_4a_3x3 = conv_block(80, 192, kernel_size=3)
+        self.Mixed_5b = inception_a(192, pool_features=32)
+        self.Mixed_5c = inception_a(256, pool_features=64)
+        self.Mixed_5d = inception_a(288, pool_features=64)
+        self.Mixed_6a = inception_b(288)
+        self.Mixed_6b = inception_c(768, channels_7x7=128)
+        self.Mixed_6c = inception_c(768, channels_7x7=160)
+        self.Mixed_6d = inception_c(768, channels_7x7=160)
+        self.Mixed_6e = inception_c(768, channels_7x7=192)
+        if aux_logits:
+            self.AuxLogits = inception_aux(768, num_classes)
+        self.Mixed_7a = inception_d(768)
+        self.Mixed_7b = inception_e(1280)
+        self.Mixed_7c = inception_e(2048)
+        #self.fc = nn.Linear(2048, num_classes)
+        if init_weights:
+            for m in self.modules():
+                if isinstance(m, nn.Conv2d) or isinstance(m, nn.Linear):
+                    import scipy.stats as stats
+                    stddev = m.stddev if hasattr(m, 'stddev') else 0.1
+                    X = stats.truncnorm(-2, 2, scale=stddev)
+                    values = torch.as_tensor(X.rvs(m.weight.numel()), dtype=m.weight.dtype)
+                    values = values.view(m.weight.size())
+                    with torch.no_grad():
+                        m.weight.copy_(values)
+                elif isinstance(m, nn.BatchNorm2d):
+                    nn.init.constant_(m.weight, 1)
+                    nn.init.constant_(m.bias, 0)
+
+    def _transform_input(self, x):
+        if self.transform_input:
+            x_ch0 = torch.unsqueeze(x[:, 0], 1) * (0.229 / 0.5) + (0.485 - 0.5) / 0.5
+            x_ch1 = torch.unsqueeze(x[:, 1], 1) * (0.224 / 0.5) + (0.456 - 0.5) / 0.5
+            x_ch2 = torch.unsqueeze(x[:, 2], 1) * (0.225 / 0.5) + (0.406 - 0.5) / 0.5
+            x = torch.cat((x_ch0, x_ch1, x_ch2), 1)
+        return x
+
+    def _forward(self, x):
+        # N x 3 x 299 x 299
+        x = self.Conv2d_1a_3x3(x)
+        # N x 32 x 149 x 149
+        x = self.Conv2d_2a_3x3(x)
+        # N x 64 x 147 x 147
+        x = self.Conv2d_2b_3x3(x)
+        # N x 64 x 147 x 147
+        x = F.max_pool2d(x, kernel_size=3, stride=2)
+        # N x 64 x 73 x 73
+        x = self.Conv2d_3b_1x1(x)
+        # N x 80 x 73 x 73
+        x = self.Conv2d_4a_3x3(x)
+        # N x 192 x 71 x 71
+        x = F.max_pool2d(x, kernel_size=3, stride=2)
+        # N x 192 x 35 x 35
+        x = self.Mixed_5b(x)
+        # N x 256 x 35 x 35
+        x = self.Mixed_5c(x)
+        # N x 288 x 35 x 35
+        x = self.Mixed_5d(x)
+        # N x 288 x 35 x 35
+        x = self.Mixed_6a(x)
+        # N x 768 x 17 x 17
+        x = self.Mixed_6b(x)
+        # N x 768 x 17 x 17
+        x = self.Mixed_6c(x)
+        # N x 768 x 17 x 17
+        x = self.Mixed_6d(x)
+        # N x 768 x 17 x 17
+        x = self.Mixed_6e(x)
+        # N x 768 x 17 x 17
+        aux_defined = self.training and self.aux_logits
+        if aux_defined:
+        	aux = self.AuxLogits(x)
+        else:
+            aux = None
+        # N x 768 x 17 x 17
+        x = self.Mixed_7a(x)
+        # N x 1280 x 8 x 8
+        x = self.Mixed_7b(x)
+        # N x 2048 x 8 x 8
+        x = self.Mixed_7c(x)
+        # N x 2048 x 8 x 8
+        # Adaptive average pooling
+        #x = F.adaptive_avg_pool2d(x, (1, 1))
+        x = F.adaptive_avg_pool2d(x, (1, 14))
+		# N x 2048 x 1 x 1
+        x = F.dropout(x, training=self.training)
+        # N x 2048 x 1 x 1
+        #x = torch.flatten(x, 1)
+        # N x 2048
+        #x = self.fc(x)
+        # N x 1000 (num_classes)
+        return x, aux
+
+    @torch.jit.unused
+    def eager_outputs(self, x, aux):
+        # type: (Tensor, Optional[Tensor]) -> InceptionOutputs
+        if self.training and self.aux_logits:
+            return InceptionOutputs(x, aux)
+        else:
+            return x
+
+    def forward(self, x):
+        x = self._transform_input(x)
+        x, aux = self._forward(x)
+        #return x
+        aux_defined = self.training and self.aux_logits
+        if torch.jit.is_scripting():
+            if not aux_defined:
+                warnings.warn("Scripted Inception3 always returns Inception3 Tuple")
+            return InceptionOutputs(x, aux)
+        else:
+            return self.eager_outputs(x, aux)
 
 
 class InceptionA(nn.Module):
