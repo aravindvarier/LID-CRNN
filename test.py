@@ -15,6 +15,7 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 parser = argparse.ArgumentParser(description='Testing script for CRNN that performs LID')
 parser.add_argument('--batch-size-test', type=int, help='batch size testing', default=64)
+parser.add_argument('model_save_path', type=str, help='path to saved model')
 args = parser.parse_args()
 
 
@@ -24,9 +25,9 @@ test_loader = DataLoader(test_dataset, batch_size = test_bs, shuffle = True)
 
 criterion = nn.CrossEntropyLoss(reduction = 'sum')
 
-model_path = input("Enter path to model: ")
+model_path = args.model_save_path
 checkpoint = torch.load(model_path)
-model = CRNN(hidden_size=checkpoint['hidden_size'], only_cnn=checkpoint['only_cnn'], cnn_type=checkpoint['cnn_type']).double().to(device)
+model = CRNN(hidden_size=checkpoint['hidden_size'], only_cnn=checkpoint['only_cnn'], cnn_type=checkpoint['cnn_type'], recurrent_type=checkpoint['recurrent_type'], nheads=checkpoint['nheads'], nlayers=checkpoint['nlayers']).double().to(device)
 model.load_state_dict(checkpoint['model_state_dict'])
 
 model.eval()

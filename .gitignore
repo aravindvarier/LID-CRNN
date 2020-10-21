@@ -5,3 +5,4 @@ model_saves/
 *.pyc
 *.BAK
 data/
+nohup.out
