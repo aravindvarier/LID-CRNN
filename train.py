@@ -25,6 +25,7 @@ pid = os.getpid()
 print("PID: {}".format(pid), file=f, flush=True)
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
+print("Device: {}".format(device))
 
 def count_parameters(model):
 	return sum(p.numel() for p in model.parameters() if p.requires_grad)	
@@ -78,7 +79,7 @@ if checkpoint_path:
 			nheads=checkpoint['nheads'], 
 			nlayers=checkpoint['nlayers']).double().to(device)
 	model.load_state_dict(checkpoint['model_state_dict'])
-	epoch = checkpoint['epoch']
+	epoch = checkpoint['epoch'] if 'epoch' in checkpoint else 0
 else:
 	model = CRNN(hidden_size=args.hidden_size, 
 			only_cnn=args.only_cnn, 
@@ -152,6 +153,7 @@ while epoch < epochs:
 	torch.manual_seed(SEED + epoch)
 	torch.cuda.empty_cache()
 	model.train()
+	model.to(device)
 	train_loss = 0
 	train_loss_aux = 0
 	total_train_correct_pred = 0
