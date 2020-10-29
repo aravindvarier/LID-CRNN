@@ -80,7 +80,7 @@ class CRNN(nn.Module):
 		
 		if self.cnn_type == 'vgg':
 			self.cnn_out_d = 256 #length of the output vectors
-			self.cnn_out_n = 13 #number of output vectors
+			self.cnn_out_n = 22 #orig-13 #number of output vectors
 		else:
 			#all inception variants have the aux part
 			self.cnn_out_d = 128
@@ -96,12 +96,12 @@ class CRNN(nn.Module):
 		else:
 			if self.recurrent_type == 'lstm':
 				self.lstm = nn.LSTM(self.cnn_out_d, self.hidden_size, bidirectional = True, batch_first = True)
-				self.fc = nn.Linear(self.hidden_size*2, 5)
+				self.fc = nn.Linear(self.hidden_size*2, 2) #orig-5
 			else:#transformer 
 				self.pos_encoder = PositionalEncoding(d_model=self.cnn_out_d)
 				#self.transformer_layer = nn.TransformerEncoderLayer(d_model=self.cnn_out_d, nhead=nheads)
 				self.transformer = nn.TransformerEncoder(nn.TransformerEncoderLayer(d_model=self.cnn_out_d, nhead=nheads), num_layers=nlayers)
-				self.fc = nn.Linear(self.cnn_out_d * self.cnn_out_n, 5)
+				self.fc = nn.Linear(self.cnn_out_d * self.cnn_out_n, 2)
 		
 			if self.cnn_ext_out_d != -1:
 				if self.recurrent_type == 'lstm':

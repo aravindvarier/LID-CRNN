@@ -6,6 +6,10 @@ import os
 from numpy.random import shuffle
 from PIL import Image
 from torchvision import transforms
+import torchaudio
+from torchaudio.transforms import Spectrogram as spec
+import math
+import subprocess
 
 np.random.seed(42)
 
@@ -57,6 +61,49 @@ class my_dataloader():
 			i += self.samples_per_class
 			itr += 1
 			yield data, torch.tensor(true_labels)
+
+class dataloader_v2:
+	def __init__(self, csv_file, batch_size, num_seconds):
+			self.csv_file = csv_file
+			self.bs = batch_size
+			self.transform = spec(256, 200)
+			self.nframes = int(8000 * num_seconds)
+			self.total_samples = 0
+
+	def __iter__(self):
+		self.total_samples = 0
+		def repeater(part):
+			audio_len = part.shape[0]
+			num_repeats = math.ceil(self.nframes / audio_len)
+			part = part.tolist() * num_repeats
+			return torch.tensor(part[:self.nframes])
+		
+		
+		csv_reader = csv.reader(open(self.csv_file, 'r'), delimiter=',')
+		all_spectrograms = []	
+		all_labels = []
+		for line in csv_reader:
+			path = line[0]
+			label = line[1]
+			audio, _ = torchaudio.load('/storage' + path)
+			audio_len = audio.shape[1]
+			num_parts = math.ceil(audio_len / self.nframes)
+			for i in range(num_parts):
+				part = audio[:, self.nframes*i:self.nframes*(i+1)]
+				part = part.squeeze(0)
+				if part.shape[0] < self.nframes:
+					part = repeater(part)
+				spectrogram = self.transform(part)
+				all_spectrograms.append(spectrogram)
+				all_labels.append(int(label))
+				if len(all_spectrograms) == self.bs:
+					self.total_samples += self.bs
+					yield torch.stack(all_spectrograms).unsqueeze(1), torch.tensor(all_labels)
+					all_spectrograms, all_labels = [], []
+		
+		self.total_samples += len(all_spectrograms)
+		return torch.stack(all_spectrograms).unsqueeze(1), torch.tensor(all_labels)
+			
 		
 	
 if __name__ == '__main__':
