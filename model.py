@@ -31,31 +31,31 @@ class VGG(nn.Module):
 								nn.ReLU(),
 								nn.BatchNorm2d(16),
 								nn.MaxPool2d((2,2), 2),
-							#	nn.Dropout(p=0.1),
+								nn.Dropout(p=0.1),
                                	
 								nn.Conv2d(16, 32, (5,5)),
 								nn.ReLU(),
 								nn.BatchNorm2d(32),
 								nn.MaxPool2d((2,2), 2),
-							#	nn.Dropout(p=0.1),
+								nn.Dropout(p=0.1),
 
 								nn.Conv2d(32,64,(3,3)),
 								nn.ReLU(),
 								nn.BatchNorm2d(64),
 								nn.MaxPool2d((2,2), 2),
-							#	nn.Dropout(p=0.1),
+								nn.Dropout(p=0.1),
 				
 								nn.Conv2d(64,128,(3,3)),
 								nn.ReLU(),
 								nn.BatchNorm2d(128),
 								nn.MaxPool2d((2,2), 2),
-							#	nn.Dropout(p=0.1),
+								nn.Dropout(p=0.1),
                                 
 								nn.Conv2d(128,256, (3,3)),
                                 nn.ReLU(),
                                 nn.BatchNorm2d(256),
                                 nn.MaxPool2d((2,2), 2),
-							#	nn.Dropout(p=0.1),
+								nn.Dropout(p=0.1),
 								)
 	def forward(self, x):
 		return self.cnn(x)

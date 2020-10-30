@@ -129,7 +129,7 @@ else:
 	weights = weights / weights.sum()
 	weights = len(langs) * weights
 	print("Weights: {}".format(weights), file=f, flush=True)
-		
+	weights = weights.to(device)		
 
 
 	val_loader = dataloader_v2('./data/final' + csv + '_shuffled_val.csv', batch_size=val_bs, num_seconds=args.num_seconds)
@@ -149,7 +149,7 @@ model_dir = 'model_saves/' + exp_name
 
 
 best_epoch = 0 
-while epoch < epochs:
+while epoch <= epochs:
 	torch.manual_seed(SEED + epoch)
 	torch.cuda.empty_cache()
 	model.train()
@@ -172,10 +172,11 @@ while epoch < epochs:
 			loss.backward()
 			optimizer.step()
 			if batch_num % 10 == 0:
-				conf_mat = confusion_matrix(label, pred_labels, labels=langs)
+				conf_mat = confusion_matrix(label.cpu(), pred_labels.cpu(), labels=langs)
+				fl_recall = conf_mat[0][0]/conf_mat[0].sum() if conf_mat[0].sum() else 0
 				print("**Batch confusion matrix**", file=f, flush=True)
 				print(conf_mat)
-				print("[{}] Accuracy(current batch): {}".format(dt.now(), train_correct_pred/len(label)), file=f, flush=True)
+				print("[{}] Accuracy(current batch): {} | FL Recall: {}".format(dt.now(), train_correct_pred/len(label), fl_recall), file=f, flush=True)
 		else: #inception_large
 			train_correct_pred = train_correct_pred_aux = 0
 			pred, pred_aux = model(audio)
@@ -203,7 +204,7 @@ while epoch < epochs:
 		if args.loader_type == "":
 			print('Epoch: {} | Train Loss: {} | Train Accuracy: {}'.format(epoch, train_loss/len(train_dataset), total_train_correct_pred/len(train_dataset)), file=f, flush=True)
 		else:
-			print('[{}] Epoch: {} | Train Loss: {} | Train Accuracy: {}'.format(dt.now(), epoch, train_loss/freqs.sum(), total_train_correct_pred/freqs.sum()), file=f, flush=True)
+			print('[{}] Epoch: {} | Train Loss: {} | Train Accuracy: {}'.format(dt.now(), epoch, train_loss/train_loader.total_samples, total_train_correct_pred/train_loader.total_samples), file=f, flush=True)
 	else:
 		print('Epoch: {} | Train Loss: {} | Train Loss(Aux): {} | Train Accuracy: {} | Train Accuracy(Aux): {} '.format(epoch, train_loss/len(train_dataset), train_loss_aux/len(train_dataset), total_train_correct_pred/len(train_dataset), total_train_correct_pred_aux/len(train_dataset)), file=f, flush=True)
 
@@ -233,7 +234,8 @@ while epoch < epochs:
 			print('Val Loss: {} | Val Accuracy: {}'.format(val_loss/len(val_dataset), val_accuracy), file=f, flush=True)
 		else:
 			val_accuracy = val_correct_pred/val_loader.total_samples
-			print('[{}] Val Loss: {} | Val Accuracy: {}'.format(dt.now(), val_loss/val_loader.total_samples, val_accuracy), file=f, flush=True)
+			fl_recall = conf_mat[0][0]/conf_mat[0].sum() if conf_mat[0].sum() else 0
+			print('[{}] Val Loss: {} | Val Accuracy: {} | FL recall: {}'.format(dt.now(), val_loss/val_loader.total_samples, val_accuracy, fl_recall), file=f, flush=True)
 		print('****Confusion Matrix****', file=f, flush=True)
 		print(conf_mat)
 		
