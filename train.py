@@ -262,24 +262,37 @@ while epoch <= epochs:
 
 
 	if args.cnn_type == 'vgg' or args.cnn_type == 'inceptionv3_s' or args.cnn_type == 'inceptionv3_m':
-		if args.loader_type == "" or args.loader_type == 'v3':
+		if args.loader_type == "":
 			print('[{}] Epoch: {} | Train Loss: {} | Train Accuracy: {}'.format(dt.now(),
 											epoch, 
 											train_loss/len(train_dataset), 
 											total_train_correct_pred/len(train_dataset)), file=f, flush=True)
+		elif args.loader_type == 'v3':
+			print('[{}] Epoch: {} | Train Loss: {} | Train Accuracy: {}'.format(dt.now(),
+											epoch, 
+											train_loss/len(train_loader), 
+											total_train_correct_pred/len(train_loader)), file=f, flush=True)
+
 		else:
 			print('[{}] Epoch: {} | Train Loss: {} | Train Accuracy: {}'.format(dt.now(), 
 											epoch, 
 											train_loss/train_loader.total_samples, 
 											total_train_correct_pred/train_loader.total_samples), file=f, flush=True)
 	else:
-		if args.loader_type == "" or args.loader_type == 'v3':
+		if args.loader_type == "":
 			print('[{}] Epoch: {} | Train Loss: {} | Train Loss(Aux): {} | Train Accuracy: {} | Train Accuracy(Aux): {} '.format(dt.now(), 
 																	epoch, 
 																	train_loss/len(train_dataset), 
 																	train_loss_aux/len(train_dataset), 
 																	total_train_correct_pred/len(train_dataset), 
 																	total_train_correct_pred_aux/len(train_dataset)), file=f, flush=True)
+		elif args.loader_type == 'v3':
+			print('[{}] Epoch: {} | Train Loss: {} | Train Loss(Aux): {} | Train Accuracy: {} | Train Accuracy(Aux): {} '.format(dt.now(), 
+																	epoch, 
+																	train_loss/len(train_dataloader), 
+																	train_loss_aux/len(train_dataloader), 
+																	total_train_correct_pred/len(train_dataloader), 
+																	total_train_correct_pred_aux/len(train_dataloader)), file=f, flush=True)
 		else:
 			print('[{}] Epoch: {} | Train Loss: {} | Train Loss(Aux): {} | Train Accuracy: {} | Train Accuracy(Aux): {} '.format(dt.now(), 
 																	epoch, 
