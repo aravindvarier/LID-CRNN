@@ -78,6 +78,7 @@ class Inception3_small(nn.Module):
         inception_e = inception_blocks[5]
         inception_aux = inception_blocks[6]
 
+        self.dropout = nn.Dropout(p=0.1)
         self.aux_logits = aux_logits
         self.transform_input = transform_input
         self.Conv2d_1a_3x3 = conv_block(1, 32, kernel_size=3, stride=2)
@@ -124,8 +125,10 @@ class Inception3_small(nn.Module):
     def _forward(self, x):
         # N x 3 x 299 x 299
         x = self.Conv2d_1a_3x3(x)
+        x = self.dropout(x)
         # N x 32 x 149 x 149
         x = self.Conv2d_2a_3x3(x)
+        x = self.dropout(x)
         # N x 64 x 147 x 147
         #x = self.Conv2d_2b_3x3(x)
         # N x 64 x 147 x 147
@@ -134,16 +137,20 @@ class Inception3_small(nn.Module):
         #x = self.Conv2d_3b_1x1(x)
         # N x 80 x 73 x 73
         x = self.Conv2d_4a_3x3(x)
+        x = self.dropout(x)
         # N x 192 x 71 x 71
         x = F.max_pool2d(x, kernel_size=3, stride=2)
         # N x 192 x 35 x 35
         x = self.Mixed_5b(x)
+        x = self.dropout(x)
         # N x 256 x 35 x 35
         x = self.Mixed_5c(x)
+        x = self.dropout(x)
         # N x 288 x 35 x 35
         #x = self.Mixed_5d(x)
         # N x 288 x 35 x 35
         x = self.Mixed_6a(x)
+        x = self.dropout(x)
         # N x 768 x 17 x 17
         #x = self.Mixed_6b(x)
         # N x 768 x 17 x 17

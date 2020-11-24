@@ -27,7 +27,12 @@ criterion = nn.CrossEntropyLoss(reduction = 'sum')
 
 model_path = args.model_save_path
 checkpoint = torch.load(model_path)
-model = CRNN(hidden_size=checkpoint['hidden_size'], only_cnn=checkpoint['only_cnn'], cnn_type=checkpoint['cnn_type'], recurrent_type=checkpoint['recurrent_type'], nheads=checkpoint['nheads'], nlayers=checkpoint['nlayers']).double().to(device)
+model = CRNN(hidden_size=checkpoint['hidden_size'], 
+		only_cnn=checkpoint['only_cnn'], 
+		cnn_type=checkpoint['cnn_type'], 
+		recurrent_type=checkpoint['recurrent_type'], 
+		nheads=checkpoint['nheads'], 
+		nlayers=checkpoint['nlayers']).double().to(device)
 model.load_state_dict(checkpoint['model_state_dict'])
 
 model.eval()

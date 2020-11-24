@@ -1,8 +1,9 @@
 venv/
 .vscode/
 __pycache__/
-model_saves/
+model_saves*/
 *.pyc
 *.BAK
 data/
 *.out
+logs*
