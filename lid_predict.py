@@ -6,11 +6,11 @@ import torch.nn.functional as F
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 parser = argparse.ArgumentParser(description='LID testing script for single audio')
-parser.add_argument('--input', type=str, help='path to input audio', required=True)
-parser.add_argument('--output', type=str, help='path to output result file', default='./result.txt')
+parser.add_argument('-i', type=str, help='path to input audio', required=True)
+parser.add_argument('-o', type=str, help='path to output result file', default='./result.txt')
 args = parser.parse_args()
 
-out_f = open(args.output, 'w')
+out_f = open(args.o, 'w')
 
 
 checkpoint = torch.load('model_saves/vgg_lstm_subset/best.pth')
@@ -25,7 +25,7 @@ model = CRNN(hidden_size=checkpoint['hidden_size'],
 model.load_state_dict(checkpoint['model_state_dict'])
 model.eval()
 
-audio, sample_rate = torchaudio.load(args.input)
+audio, sample_rate = torchaudio.load(args.i)
 assert(sample_rate == 8000)
 
 audio = audio.unsqueeze(0)
@@ -36,8 +36,10 @@ probs = F.softmax(pred, dim=1)
 pred_label = torch.argmax(pred, dim=1)
 
 
-out_f.write("Labels- {0: FL, 1: EN}\n")
-out_f.write("Model prediction in probabilites: {}\n".format(probs.cpu().tolist()))
-out_f.write("Predicted label: {}\n".format(pred_label.cpu().item()))
+#out_f.write("Labels- {0: FL, 1: EN}\n")
+#out_f.write("Model prediction in probabilites: {}\n".format(probs.cpu().tolist()))
+#out_f.write("Predicted label: {}\n".format(pred_label.cpu().item()))
+out_f.write(str(pred_label.cpu().item()))
+out_f.close()
 
 

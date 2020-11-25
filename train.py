@@ -323,9 +323,17 @@ while epoch <= epochs:
 		conf_mat = confusion_matrix(all_labels, all_pred_labels)
 		
 		fl_recall = conf_mat[0][0]/conf_mat[0].sum() if conf_mat[0].sum() else 0
-		if args.loader_type == "" or args.loader_type == 'v3':
+		if args.loader_type == "":
 			val_accuracy = val_correct_pred/len(val_dataset)
 			val_loss_avg = val_loss/len(val_dataset)
+			print('[{}] Epoch: {} | Val Loss: {} | Val Accuracy: {} | FL recall: {}'.format(dt.now(), 
+													epoch, 
+													val_loss_avg, 
+													val_accuracy,
+													fl_recall), file=f, flush=True)
+		elif args.loader_type == 'v3':
+			val_accuracy = val_correct_pred/len(val_loader)
+			val_loss_avg = val_loss/len(val_loader)
 			print('[{}] Epoch: {} | Val Loss: {} | Val Accuracy: {} | FL recall: {}'.format(dt.now(), 
 													epoch, 
 													val_loss_avg, 
