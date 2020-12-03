@@ -13,7 +13,7 @@ args = parser.parse_args()
 out_f = open(args.o, 'w')
 
 
-checkpoint = torch.load('model_saves/vgg_lstm_subset/best.pth')
+checkpoint = torch.load('model_saves/vgg_lstm_subset_newloader/best.pth')
 model = CRNN(hidden_size=checkpoint['hidden_size'], 
 		only_cnn=checkpoint['only_cnn'], 
 		cnn_type=checkpoint['cnn_type'], 
@@ -33,6 +33,7 @@ audio = audio.double().to(device)
 with torch.no_grad():
 	pred = model(audio)
 probs = F.softmax(pred, dim=1)
+print(probs)
 pred_label = torch.argmax(pred, dim=1)
 
 

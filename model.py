@@ -78,6 +78,7 @@ class CRNN(nn.Module):
 		if self.cnn_type == 'vgg':
 			self.cnn = VGG()
 		elif self.cnn_type == 'inceptionv3_l':
+			#min size - 124
 			self.cnn = Inception3_large()
 		elif self.cnn_type == 'inceptionv3_m':
 			self.cnn = Inception3_medium()
@@ -169,7 +170,7 @@ class CRNN(nn.Module):
 				aux = aux.squeeze(2).permute(0,2,1)
 				if self.recurrent_type == 'transformer':
 					x = x * math.sqrt(self.cnn_ext_out_d)
-					x = self.pos_encoder_ext(x)
+					#x = self.pos_encoder_ext(x)
 					x = self.transformer_ext(x)
 					x = x.flatten(start_dim=1)
 

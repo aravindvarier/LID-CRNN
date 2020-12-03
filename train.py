@@ -193,6 +193,7 @@ optimizer = optim.Adam(model.parameters(), lr=args.lr, betas=(args.beta1, args.b
 epochs = args.num_epochs
 max_loss = 2**32
 best_recall = 0
+best_f1 = 0
 
 if not args.exp_name:
 	exp_name = args.cnn_type + "_" + str(args.only_cnn) + "_" + ("" if args.only_cnn else str(args.hidden_size))
@@ -289,10 +290,10 @@ while epoch <= epochs:
 		elif args.loader_type == 'v3':
 			print('[{}] Epoch: {} | Train Loss: {} | Train Loss(Aux): {} | Train Accuracy: {} | Train Accuracy(Aux): {} '.format(dt.now(), 
 																	epoch, 
-																	train_loss/len(train_dataloader), 
-																	train_loss_aux/len(train_dataloader), 
-																	total_train_correct_pred/len(train_dataloader), 
-																	total_train_correct_pred_aux/len(train_dataloader)), file=f, flush=True)
+																	train_loss/len(train_loader), 
+																	train_loss_aux/len(train_loader), 
+																	total_train_correct_pred/len(train_loader), 
+																	total_train_correct_pred_aux/len(train_loader)), file=f, flush=True)
 		else:
 			print('[{}] Epoch: {} | Train Loss: {} | Train Loss(Aux): {} | Train Accuracy: {} | Train Accuracy(Aux): {} '.format(dt.now(), 
 																	epoch, 
@@ -322,31 +323,41 @@ while epoch <= epochs:
 		all_pred_labels = torch.cat(all_pred_labels)
 		conf_mat = confusion_matrix(all_labels, all_pred_labels)
 		
-		fl_recall = conf_mat[0][0]/conf_mat[0].sum() if conf_mat[0].sum() else 0
+		fl_recall = conf_mat[0][0]/conf_mat[0].sum() if conf_mat[0][0] else 0
+		fl_precision = conf_mat[0][0]/conf_mat[:,0].sum() if conf_mat[0][0] else 0
+		fl_f1 = 0
+		if fl_recall + fl_precision:
+			fl_f1 = 2 * fl_recall * fl_precision / (fl_recall + fl_precision)
 		if args.loader_type == "":
 			val_accuracy = val_correct_pred/len(val_dataset)
 			val_loss_avg = val_loss/len(val_dataset)
-			print('[{}] Epoch: {} | Val Loss: {} | Val Accuracy: {} | FL recall: {}'.format(dt.now(), 
+			print('[{}] Epoch: {} | Val Loss: {} | Val Accuracy: {} | FL recall: {} | FL precision: {} | FL F1: {}'.format(dt.now(), 
 													epoch, 
 													val_loss_avg, 
 													val_accuracy,
-													fl_recall), file=f, flush=True)
+													fl_recall,
+													fl_precision,
+													fl_f1), file=f, flush=True)
 		elif args.loader_type == 'v3':
 			val_accuracy = val_correct_pred/len(val_loader)
 			val_loss_avg = val_loss/len(val_loader)
-			print('[{}] Epoch: {} | Val Loss: {} | Val Accuracy: {} | FL recall: {}'.format(dt.now(), 
+			print('[{}] Epoch: {} | Val Loss: {} | Val Accuracy: {} | FL recall: {}, FL precision: {} | FL F1: {}'.format(dt.now(), 
 													epoch, 
 													val_loss_avg, 
 													val_accuracy,
-													fl_recall), file=f, flush=True)
+													fl_recall,
+													fl_precision,
+													fl_f1), file=f, flush=True)
 		else:
 			val_accuracy = val_correct_pred/len(all_labels)
 			val_loss_avg = val_loss/len(all_labels)
-			print('[{}] Epoch: {} | Val Loss: {} | Val Accuracy: {} | FL recall: {}'.format(dt.now(), 
+			print('[{}] Epoch: {} | Val Loss: {} | Val Accuracy: {} | FL recall: {}, FL precision: {} | FL F1: {}'.format(dt.now(), 
 													epoch, 
 													val_loss_avg, 
 													val_accuracy, 
-													fl_recall), file=f, flush=True)
+													fl_recall,
+													fl_precision,
+													fl_f1), file=f, flush=True)
 		print('****Confusion Matrix****', file=f, flush=True)
 		print(conf_mat, file=f, flush=True)
 		
@@ -385,6 +396,23 @@ while epoch <= epochs:
 					'nlayers' : args.nlayers,
 					'input_shape' : input_shape,
 					'epoch' : epoch}, os.path.join(model_dir ,'best_recall.pth'))
+		if fl_f1 > best_f1:
+			best_f1 = fl_f1
+			print('Saving the model for better f1...', file=f, flush=True)
+			if not os.path.isdir(model_dir):
+				os.makedirs(model_dir)
+
+			torch.save({'model_state_dict' : model.state_dict(), 
+					'hidden_size' : args.hidden_size, 
+					'only_cnn' : args.only_cnn, 
+					'cnn_type' : args.cnn_type, 
+					'recurrent_type' : args.recurrent_type,
+					'lstm_layers' : args.lstm_layers,
+					'nheads' : args.nheads, 
+					'nlayers' : args.nlayers,
+					'input_shape' : input_shape,
+					'epoch' : epoch}, os.path.join(model_dir ,'best_f1.pth'))
+
 
 
 	print("Saving latest model...", file=f, flush=True)
